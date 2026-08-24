@@ -107,13 +107,4 @@ curl -X POST http://127.0.0.1:8000/upload \
 
 ---
 
-### Push Updated README to GitHub:
 
-Run this in your terminal to update GitHub:
-
-```bash
-git add README.md
-git commit -m "docs: add comprehensive README documentation"
-git push origin main
-
-```
