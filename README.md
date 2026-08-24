@@ -1,7 +1,8 @@
 
 # Smart Resume Screener & Recruiter Co-Pilot
 
-[![Watch Smart Resume Screener Demo](https://drive.google.com/file/d/1XCBl0JDA_qA_o-6UHJ8Q9FZFxxYUYrnv/view?usp=sharing)
+🎥 **[Watch the Live Application Demo Video](https://drive.google.com/file/d/1XCBl0JDA_qA_o-6UHJ8Q9FZFxxYUYrnv/view?usp=sharing)**
+
 A production-style candidate screening stack powered by **FastAPI**, **Pydantic v2**, **SentenceTransformers**, **ChromaDB**, **SQLite (SQLModel)**, and **Streamlit**.
 
 The pipeline extracts PDF text, optionally redacts PII for bias reduction, scores each resume using a hybrid ranking formula (40% vector similarity / 60% LLM evaluation), stores candidate records in SQLite, indexes text chunks in ChromaDB, and exposes an interactive recruiter chat co-pilot alongside enterprise cost analytics.
