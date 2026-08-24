@@ -1,84 +1,117 @@
+
 # Smart Resume Screener & Recruiter Co-Pilot
 
-Production-style screening stack: FastAPI + Pydantic v2 + SentenceTransformers + ChromaDB + SQLite (SQLModel) + Streamlit.
+A production-style candidate screening stack powered by **FastAPI**, **Pydantic v2**, **SentenceTransformers**, **ChromaDB**, **SQLite (SQLModel)**, and **Streamlit**.
 
-The pipeline extracts PDF text, optionally redacts PII, scores each resume with a hybrid **40% embedding / 60% LLM** formula, stores results in SQLite, indexes chunks in ChromaDB, and exposes a recruiter chat co-pilot plus cost analytics.
+The pipeline extracts PDF text, optionally redacts PII for bias reduction, scores each resume using a hybrid ranking formula (40% vector similarity / 60% LLM evaluation), stores candidate records in SQLite, indexes text chunks in ChromaDB, and exposes an interactive recruiter chat co-pilot alongside enterprise cost analytics.
 
-## Architecture
+---
+
+## Architecture Overview
 
 | Layer | Module | Role |
 | --- | --- | --- |
-| API | `app/main.py` | REST: `/upload`, `/query`, `/analytics` |
-| Parse | `app/parser.py` | `pdfplumber` extraction + regex PII strip |
-| Score | `app/engine.py` | MiniLM cosine similarity + structured LLM JSON |
-| RAG | `app/rag.py` | Persistent Chroma collection at `./chroma_db` |
-| Store | `app/db.py` | SQLite `screener.db` (`Candidate`, `Evaluation`) |
-| UI | `frontend/app.py` | Dark Streamlit dashboard (3 tabs) |
+| **API** | `app/main.py` | REST endpoints: `/upload`, `/query`, `/analytics`, `/health` |
+| **Parse** | `app/parser.py` | `pdfplumber` text extraction + regex-based PII redaction |
+| **Score** | `app/engine.py` | MiniLM cosine similarity + structured LLM JSON scoring |
+| **RAG** | `app/rag.py` | Persistent Chroma collection stored at `./chroma_db` |
+| **Store** | `app/db.py` | SQLite database (`screener.db`) tracking Candidates and Evaluations |
+| **UI** | `frontend/app.py` | Streamlit dashboard with warm light theme and 3 functional tabs |
 
-Hybrid score:
+### Scoring Methodology
 
-```text
-final_score = (vector_score * 0.4) + ((llm_score * 10) * 0.6)
-```
+The final candidate rank is calculated using a hybrid formula:
 
-`vector_score` is 0–100. `llm_score` is 1.0–10.0. Token cost is estimated at **$0.0015 / 1k tokens**. If `OPENAI_API_KEY` is missing or the call fails, a deterministic keyword scorer is used and spend stays `$0`.
+$$\text{Final Score} = (\text{Vector Score} \times 0.4) + ((\text{LLM Score} \times 10) \times 0.6)$$
 
-## Setup
+* **Vector Score:** Normalized range $0 - 100$ based on cosine similarity.
+* **LLM Score:** Rated $1.0 - 10.0$ via structured JSON responses.
+* **Cost Efficiency:** Token expenditure is tracked at ~$0.0015 / 1k tokens. If `OPENAI_API_KEY` is missing or fails, the system automatically falls back to a deterministic keyword scorer ($0 cost).
+
+---
+
+## Quick Start
+
+### 1. Setup Environment
 
 ```bash
+# Navigate to project directory
 cd smart-resume-screener
+
+# Create and activate virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Configure environment variables
 cp .env.example .env
+
 ```
 
-Edit `.env` if you have an OpenAI key. The first run downloads `sentence-transformers/all-MiniLM-L6-v2`.
+*(Note: On first run, `sentence-transformers/all-MiniLM-L6-v2` will download automatically.)*
 
-## Run
+---
 
-Terminal 1 — API:
+### 2. Running the Application
+
+**Terminal 1 — FastAPI Backend:**
 
 ```bash
 cd smart-resume-screener
 source .venv/bin/activate
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
 ```
 
-Terminal 2 — UI:
+**Terminal 2 — Streamlit Frontend:**
 
 ```bash
 cd smart-resume-screener
 source .venv/bin/activate
 streamlit run frontend/app.py
+
 ```
 
-Open the Streamlit URL (typically `http://localhost:8501`). The UI talks to FastAPI when `/health` is up; otherwise it runs the same pipeline in-process.
+Open `http://localhost:8501` in your browser. The UI seamlessly connects to FastAPI when active, falling back to local in-process execution if offline.
 
-## API
+---
 
-- `POST /upload` — multipart: `files` (PDFs), `job_description`, `anonymize`
-- `POST /query` — JSON `{ "query": "...", "top_k": 5 }`
-- `GET /analytics` — candidate count, average match, total latency, cumulative token cost
-- `GET /health` — liveness
+## API Documentation
 
-Example:
+* `POST /upload` — Multipart form upload for candidate PDFs, job description, and PII anonymization toggle.
+* `POST /query` — JSON payload (`{"query": "...", "top_k": 5}`) to retrieve relevant candidate chunks via ChromaDB RAG.
+* `GET /analytics` — Returns metrics including total candidate count, average match score, latency, and cumulative LLM token spend.
+* `GET /health` — Service liveness probe.
+
+### Example Request
 
 ```bash
 curl -X POST http://127.0.0.1:8000/upload \
   -F "job_description=Senior Python engineer with FastAPI and RAG experience" \
   -F "anonymize=true" \
   -F "files=@resume.pdf"
+
 ```
 
-## Dashboard tabs
+---
 
-1. **Candidate Screening** — sidebar JD + PII toggle, multi-PDF upload, ranked table, score bars, skill-gap tags, justification.
-2. **Recruiter Co-Pilot (Chat)** — `st.chat_message` over Chroma snippets.
-3. **System & Cost Analytics** — resumes processed, average latency, LLM spend.
+## Dashboard Features
 
-## Notes
+* **Candidate Screening:** Full-width Job Description input, PDF uploader, match score progress bars, extracted skill-gap tags, and detailed justifications.
+* **Recruiter Co-Pilot (Chat):** Conversational RAG interface powered by ChromaDB snippet retrieval.
+* **System & Cost Analytics:** High-level telemetry for processing latency, total token consumption, and live API status.
 
-- Image-only PDFs have no extractable text and are rejected with a clear error.
-- SQLite file: `screener.db` in the project root. Vector store: `chroma_db/`.
-- FastAPI file uploads require `python-multipart` (already listed in `requirements.txt`).
+---
+
+### Push Updated README to GitHub:
+
+Run this in your terminal to update GitHub:
+
+```bash
+git add README.md
+git commit -m "docs: add comprehensive README documentation"
+git push origin main
+
+```
