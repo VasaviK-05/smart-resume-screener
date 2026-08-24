@@ -1,7 +1,7 @@
 
 # Smart Resume Screener & Recruiter Co-Pilot
 
-🎥 **[Watch the Live Application Demo Video](https://drive.google.com/file/d/1XCBl0JDA_qA_o-6UHJ8Q9FZFxxYUYrnv/view?usp=sharing)**
+🎥 **[Watch the Live Application Demo Video](https://drive.google.com/file/d/1XCBl0JDA_qA_o-6UHJ8Q9FZFxxYUYrnv/preview)**
 
 A production-style candidate screening stack powered by **FastAPI**, **Pydantic v2**, **SentenceTransformers**, **ChromaDB**, **SQLite (SQLModel)**, and **Streamlit**.
 
